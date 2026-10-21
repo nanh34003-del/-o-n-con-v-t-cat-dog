@@ -1,0 +1,818 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animal Shadow Guessing Game</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --purple: #7556e8;
+      --pink: #ff6fae;
+      --yellow: #ffd65a;
+      --green: #43c99a;
+      --blue: #66c9ff;
+      --text: #39335c;
+    }
+
+    body {
+      min-height: 100vh;
+      padding: 24px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Trebuchet MS", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 15%, #ffe4ef 0, transparent 25%),
+        radial-gradient(circle at 90% 85%, #d8f6ff 0, transparent 30%),
+        linear-gradient(135deg, #fff8df, #f4eaff);
+      overflow-x: hidden;
+    }
+
+    button {
+      font: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .game {
+      width: 100%;
+      max-width: 570px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.94);
+      border: 4px solid white;
+      border-radius: 32px;
+      box-shadow: 0 15px 45px rgba(96, 67, 157, 0.16);
+      text-align: center;
+      animation: appear 0.6s ease;
+    }
+
+    .decoration {
+      position: absolute;
+      pointer-events: none;
+      font-size: 28px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .star-one { top: 100px; left: 13px; }
+    .star-two {
+      top: 160px;
+      right: 13px;
+      animation-delay: 0.8s;
+    }
+    .star-three {
+      bottom: 100px;
+      left: 15px;
+      animation-delay: 1.2s;
+    }
+
+    .header {
+      position: relative;
+      z-index: 1;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 17px;
+      margin-bottom: 12px;
+      border-radius: 30px;
+      background: #fff0b7;
+      color: #8a6500;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+    }
+
+    h1 {
+      font-size: clamp(27px, 6vw, 39px);
+      line-height: 1.15;
+      font-weight: 1000;
+      color: var(--purple);
+      text-shadow: 2px 3px 0 #e6dcff;
+    }
+
+    h1 span {
+      display: block;
+      margin-top: 7px;
+      color: #ff75a9;
+      font-size: 0.65em;
+      text-shadow: none;
+    }
+
+    .subtitle {
+      margin: 14px 0 20px;
+      color: #88809e;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .stats {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .stat {
+      flex: 1;
+      padding: 12px 8px;
+      border-radius: 17px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .stat:first-child {
+      background: #eee8ff;
+      color: #6749c7;
+    }
+
+    .stat:last-child {
+      background: #fff1c7;
+      color: #926500;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 22px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      margin-bottom: 22px;
+      overflow: hidden;
+      border-radius: 20px;
+      background: #eeeaf5;
+    }
+
+    .progress-bar {
+      width: 25%;
+      height: 100%;
+      border-radius: 20px;
+      background: linear-gradient(90deg, #ff82b3, #8b71ff);
+      transition: width 0.5s ease;
+    }
+
+    .question {
+      margin-bottom: 17px;
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .shadow-stage {
+      min-height: 225px;
+      margin-bottom: 23px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      border: 3px dashed #ded4ff;
+      border-radius: 25px;
+      background: linear-gradient(145deg, #f8f4ff, #eaf8ff);
+    }
+
+    .stage-stars {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      font-size: 22px;
+      color: #d7c8ff;
+    }
+
+    .stage-stars span {
+      position: absolute;
+    }
+
+    .stage-stars span:nth-child(1) {
+      top: 17px;
+      left: 22px;
+    }
+
+    .stage-stars span:nth-child(2) {
+      top: 34px;
+      right: 27px;
+    }
+
+    .stage-stars span:nth-child(3) {
+      bottom: 20px;
+      left: 35px;
+    }
+
+    .animal {
+      position: relative;
+      z-index: 1;
+      font-size: 125px;
+      line-height: 1.3;
+      user-select: none;
+      transition: filter 0.4s ease, transform 0.4s ease;
+    }
+
+    .animal.hidden-shadow {
+      filter: brightness(0) grayscale(1);
+    }
+
+    .animal.revealed {
+      animation: bounce 0.65s ease;
+    }
+
+    .stage-hint {
+      margin-top: 5px;
+      font-size: 13px;
+      color: #9890b2;
+      font-weight: bold;
+    }
+
+    .answers {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .answer-btn {
+      min-height: 66px;
+      padding: 13px 8px;
+      border: 3px solid transparent;
+      border-radius: 19px;
+      background: #f4efff;
+      color: #55477f;
+      font-size: 17px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s,
+                  background 0.2s;
+    }
+
+    .answer-btn:nth-child(2) {
+      background: #e9f8ff;
+      color: #2477a6;
+    }
+
+    .answer-btn:nth-child(3) {
+      background: #fff0f5;
+      color: #b84f7c;
+    }
+
+    .answer-btn:nth-child(4) {
+      background: #e7fff3;
+      color: #21835e;
+    }
+
+    .answer-btn:hover:not(:disabled) {
+      transform: translateY(-4px);
+      box-shadow: 0 7px 0 rgba(86, 68, 139, 0.12);
+    }
+
+    .answer-btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .answer-btn:focus-visible,
+    .play-again:focus-visible {
+      outline: 4px solid #ffc94a;
+      outline-offset: 3px;
+    }
+
+    .answer-btn:disabled {
+      cursor: default;
+      opacity: 0.65;
+    }
+
+    .answer-btn.correct {
+      border-color: #35c98b;
+      background: #c9ffe6;
+      color: #08764c;
+      opacity: 1;
+      animation: pop 0.4s ease;
+    }
+
+    .answer-btn.wrong {
+      border-color: #ff6689;
+      background: #ffe1e9;
+      color: #bd2850;
+      animation: shake 0.35s ease;
+      opacity: 1;
+    }
+
+    .feedback {
+      min-height: 38px;
+      margin-top: 18px;
+      font-size: 19px;
+      font-weight: 900;
+    }
+
+    .feedback.success { color: #14a66e; }
+    .feedback.error { color: #ed5480; }
+    .feedback.info { color: #7a65d8; }
+
+    .footer {
+      margin-top: 10px;
+      color: #aaa3bf;
+      font-size: 12px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .result {
+      padding: 18px 0 8px;
+      animation: appear 0.5s ease;
+    }
+
+    .trophy {
+      font-size: 100px;
+      animation: bounce 1s infinite;
+    }
+
+    .result h2 {
+      margin: 12px 0;
+      color: var(--purple);
+      font-size: 32px;
+    }
+
+    .result p {
+      margin: 12px 0;
+      color: #807797;
+      line-height: 1.6;
+    }
+
+    .final-score {
+      margin: 22px 0;
+      padding: 20px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #fff0b7, #ffe1ed);
+    }
+
+    .final-score strong {
+      display: block;
+      margin-top: 7px;
+      color: #7556e8;
+      font-size: 42px;
+    }
+
+    .play-again {
+      width: 100%;
+      min-height: 60px;
+      padding: 14px;
+      border: none;
+      border-radius: 19px;
+      background: linear-gradient(135deg, #8564f5, #ff76ad);
+      color: white;
+      font-size: 19px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 6px 0 #d8c9ff;
+      transition: transform 0.2s;
+    }
+
+    .play-again:hover {
+      transform: translateY(-3px);
+    }
+
+    .confetti-piece {
+      position: fixed;
+      top: -20px;
+      z-index: 999;
+      width: 10px;
+      height: 16px;
+      pointer-events: none;
+      animation: confetti-fall 2s ease-in forwards;
+    }
+
+    @keyframes appear {
+      from {
+        opacity: 0;
+        transform: translateY(15px) scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(-8deg); }
+      50% { transform: translateY(-12px) rotate(10deg); }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      30% { transform: translateY(-20px) scale(1.08); }
+      60% { transform: translateY(0) scale(0.96); }
+      80% { transform: translateY(-8px) scale(1.03); }
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.9); }
+      60% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-7px); }
+      50% { transform: translateX(7px); }
+      75% { transform: translateX(-4px); }
+    }
+
+    @keyframes confetti-fall {
+      0% {
+        transform: translateY(-5vh) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(110vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 420px) {
+      body { padding: 12px 9px; }
+
+      .game {
+        padding: 22px 15px;
+        border-radius: 25px;
+      }
+
+      .animal { font-size: 105px; }
+      .shadow-stage { min-height: 200px; }
+      .answer-btn { font-size: 15px; min-height: 62px; }
+      .stat strong { font-size: 20px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="game">
+    <span class="decoration star-one">⭐</span>
+    <span class="decoration star-two">✨</span>
+    <span class="decoration star-three">🌈</span>
+
+    <header class="header">
+      <div class="badge">🎮 FUN MINI GAME</div>
+      <h1>
+        GUESS THE ANIMAL!
+        <span>🐾 Animal Shadow Game 🐾</span>
+      </h1>
+      <p class="subtitle">
+        Look at the shadow and guess which animal it is!
+      </p>
+    </header>
+
+    <section id="gameScreen">
+      <div class="stats">
+        <div class="stat">
+          QUESTION
+          <strong id="questionCount">1 / 4</strong>
+        </div>
+        <div class="stat">
+          YOUR SCORE
+          <strong id="score">0 ⭐</strong>
+        </div>
+      </div>
+
+      <div
+        class="progress-track"
+        role="progressbar"
+        aria-label="Game progress"
+        aria-valuemin="0"
+        aria-valuemax="4"
+        aria-valuenow="0"
+        id="progressTrack"
+      >
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <p class="question">🤔 Which animal is this?</p>
+
+      <div class="shadow-stage">
+        <div class="stage-stars" aria-hidden="true">
+          <span>✦</span>
+          <span>✧</span>
+          <span>✦</span>
+        </div>
+
+        <div
+          id="animalShadow"
+          class="animal hidden-shadow"
+          role="img"
+          aria-label="Mystery animal shadow"
+        >🐱</div>
+
+        <div class="stage-hint" id="stageHint">
+          Look closely at the shadow! 👀
+        </div>
+      </div>
+
+      <div class="answers" id="answers" aria-label="Answer choices">
+      </div>
+
+      <div
+        class="feedback"
+        id="feedback"
+        role="status"
+        aria-live="polite"
+      ></div>
+
+      <p class="footer">💖 Keep going! You can do it! 💖</p>
+    </section>
+
+    <section id="resultScreen" class="result hidden">
+      <div class="trophy" id="trophy">🏆</div>
+      <h2 id="resultTitle">Amazing Job!</h2>
+      <p id="resultMessage">
+        You have completed all the questions!
+      </p>
+
+      <div class="final-score">
+        🌟 YOUR FINAL SCORE 🌟
+        <strong id="finalScore">0 / 40</strong>
+        <p id="finalComment">You are amazing!</p>
+      </div>
+
+      <button class="play-again" id="playAgain">
+        🔄 Play Again!
+      </button>
+    </section>
+  </main>
+
+  <script>
+    "use strict";
+
+    const animals = [
+      { id: "cat", name: "Cat", emoji: "🐱" },
+      { id: "fish", name: "Fish", emoji: "🐟" },
+      { id: "rabbit", name: "Rabbit", emoji: "🐰" },
+      { id: "dog", name: "Dog", emoji: "🐶" }
+    ];
+
+    const POINTS_PER_QUESTION = 10;
+    const NEXT_QUESTION_DELAY = 1500;
+
+    const animalShadow = document.getElementById("animalShadow");
+    const stageHint = document.getElementById("stageHint");
+    const answersContainer = document.getElementById("answers");
+    const feedback = document.getElementById("feedback");
+    const scoreElement = document.getElementById("score");
+    const questionCount = document.getElementById("questionCount");
+    const progressBar = document.getElementById("progressBar");
+    const progressTrack = document.getElementById("progressTrack");
+    const gameScreen = document.getElementById("gameScreen");
+    const resultScreen = document.getElementById("resultScreen");
+
+    let questions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let locked = false;
+    let transitionTimer = null;
+
+    function shuffle(array) {
+      const result = [...array];
+
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+
+      return result;
+    }
+
+    function startGame() {
+      if (transitionTimer !== null) {
+        clearTimeout(transitionTimer);
+        transitionTimer = null;
+      }
+
+      questions = shuffle(animals);
+      currentIndex = 0;
+      score = 0;
+      locked = false;
+
+      gameScreen.classList.remove("hidden");
+      resultScreen.classList.add("hidden");
+
+      scoreElement.textContent = "0 ⭐";
+
+      showQuestion();
+    }
+
+    function showQuestion() {
+      if (currentIndex >= questions.length) {
+        endGame();
+        return;
+      }
+
+      locked = false;
+
+      const currentAnimal = questions[currentIndex];
+
+      questionCount.textContent =
+        `${currentIndex + 1} / ${questions.length}`;
+
+      progressBar.style.width =
+        `${(currentIndex / questions.length) * 100}%`;
+
+      progressTrack.setAttribute("aria-valuenow", currentIndex);
+
+      animalShadow.textContent = currentAnimal.emoji;
+      animalShadow.classList.remove("revealed");
+      animalShadow.classList.add("hidden-shadow");
+      animalShadow.setAttribute(
+        "aria-label",
+        "Mystery animal shadow"
+      );
+
+      stageHint.textContent = "Look closely at the shadow! 👀";
+
+      feedback.textContent = "";
+      feedback.className = "feedback";
+
+      const choices = shuffle(animals);
+
+      answersContainer.replaceChildren();
+
+      choices.forEach((animal, index) => {
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className = "answer-btn";
+        button.dataset.animalId = animal.id;
+        button.textContent = `${index + 1}. ${animal.name}`;
+
+        button.addEventListener("click", () => {
+          checkAnswer(animal, button);
+        });
+
+        answersContainer.appendChild(button);
+      });
+    }
+
+    function checkAnswer(selectedAnimal, selectedButton) {
+      if (locked) return;
+
+      const correctAnimal = questions[currentIndex];
+
+      if (selectedAnimal.id === correctAnimal.id) {
+        locked = true;
+
+        score += POINTS_PER_QUESTION;
+        scoreElement.textContent = `${score} ⭐`;
+
+        selectedButton.classList.add("correct");
+
+        const buttons = answersContainer.querySelectorAll("button");
+
+        buttons.forEach(button => {
+          button.disabled = true;
+        });
+
+        animalShadow.classList.remove("hidden-shadow");
+        animalShadow.classList.remove("revealed");
+
+        void animalShadow.offsetWidth;
+        animalShadow.classList.add("revealed");
+
+        animalShadow.setAttribute(
+          "aria-label",
+          correctAnimal.name
+        );
+
+        stageHint.textContent =
+          `${correctAnimal.emoji} You found it!`;
+
+        feedback.textContent = "🎉 Correct! Great job! 🎉";
+        feedback.className = "feedback success";
+
+        progressBar.style.width =
+          `${((currentIndex + 1) / questions.length) * 100}%`;
+
+        progressTrack.setAttribute(
+          "aria-valuenow",
+          currentIndex + 1
+        );
+
+        launchConfetti();
+
+        transitionTimer = setTimeout(() => {
+          transitionTimer = null;
+          currentIndex++;
+          showQuestion();
+        }, NEXT_QUESTION_DELAY);
+
+      } else {
+        selectedButton.classList.remove("wrong");
+
+        void selectedButton.offsetWidth;
+
+        selectedButton.classList.add("wrong");
+
+        feedback.textContent = "💗 Not quite! Try again!";
+        feedback.className = "feedback error";
+
+        selectedButton.disabled = true;
+      }
+    }
+
+    function launchConfetti() {
+      const colors = [
+        "#ff6fae",
+        "#ffd65a",
+        "#43c99a",
+        "#66c9ff",
+        "#9b7bff",
+        "#ff956b"
+      ];
+
+      for (let i = 0; i < 55; i++) {
+        const piece = document.createElement("div");
+
+        piece.className = "confetti-piece";
+        piece.style.left = `${Math.random() * 100}vw`;
+
+        piece.style.backgroundColor =
+          colors[Math.floor(Math.random() * colors.length)];
+
+        piece.style.animationDuration =
+          `${1.3 + Math.random() * 1.4}s`;
+
+        piece.style.animationDelay =
+          `${Math.random() * 0.45}s`;
+
+        piece.style.width = `${6 + Math.random() * 7}px`;
+        piece.style.height = `${9 + Math.random() * 11}px`;
+
+        document.body.appendChild(piece);
+
+        piece.addEventListener("animationend", () => {
+          piece.remove();
+        }, { once: true });
+      }
+    }
+
+    function endGame() {
+      gameScreen.classList.add("hidden");
+      resultScreen.classList.remove("hidden");
+
+      progressBar.style.width = "100%";
+      progressTrack.setAttribute("aria-valuenow", questions.length);
+
+      document.getElementById("finalScore").textContent =
+        `${score} / 40`;
+
+      const trophy = document.getElementById("trophy");
+      const title = document.getElementById("resultTitle");
+      const message = document.getElementById("resultMessage");
+      const comment = document.getElementById("finalComment");
+
+      if (score === 40) {
+        trophy.textContent = "🏆";
+        title.textContent = "Animal Guessing Champion!";
+        message.textContent =
+          "Fantastic! You guessed every animal correctly!";
+        comment.textContent = "A perfect score! You are amazing! 🌟";
+        launchConfetti();
+      } else if (score >= 20) {
+        trophy.textContent = "🥇";
+        title.textContent = "Great Job!";
+        message.textContent =
+          "You have completed all four questions!";
+        comment.textContent =
+          "Play again and try to get the perfect score! 💖";
+      } else {
+        trophy.textContent = "🌈";
+        title.textContent = "Keep Practicing!";
+        message.textContent =
+          "Every game is a chance to learn something new!";
+        comment.textContent =
+          "Try again and discover all the animals! 🐾";
+      }
+    }
+
+    document.getElementById("playAgain").addEventListener(
+      "click",
+      startGame
+    );
+
+    startGame();
+  </script>
+</body>
+</html>
